@@ -6,6 +6,8 @@ use App\Models\Empleado;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Storage;
+
 class EmpleadoController extends Controller
 {
     /**
@@ -45,6 +47,7 @@ class EmpleadoController extends Controller
         $datosEmpleado = request()->except('_token');
 
         if($request->hasFile('foto')){
+             
             $datosEmpleado['foto']=$request->file('foto')->store('uploads','public');
         }
 
@@ -54,7 +57,8 @@ class EmpleadoController extends Controller
         Empleado::insert($datosEmpleado);
 
 
-        return response()->json($datosEmpleado); 
+        //return response()->json($datosEmpleado); 
+        return redirect('empleado')->with('mensaje','Empleado agregado con éxito');
     }
 
     /**
@@ -92,8 +96,18 @@ class EmpleadoController extends Controller
     {
         //
         $datosEmpleado = request()->except(['_token','_method']);
-        Empleado::where('id','=',$id)->update($datosEmpleado);
 
+        if($request->hasFile('foto')){
+            $empleado=Empleado::findOrFail($id);
+
+            Storage::delete('public/'.$empleado->foto);
+
+            $datosEmpleado['foto']=$request->file('foto')->store('uploads','public');
+        }
+
+
+
+        Empleado::where('id','=',$id)->update($datosEmpleado);
         $empleado=Empleado::findOrFail($id);
         return view('empleado.edit', compact('empleado'));
 
@@ -108,8 +122,16 @@ class EmpleadoController extends Controller
     public function destroy($id)
     {
         //
-        Empleado::destroy($id);
-        return redirect('empleado');
+        $empleado=Empleado::findOrFail($id);
+
+        if(Storage::delete(['public/'.$empleado->foto])){
+
+            Empleado::destroy($id);
+
+        }
+
+        
+        return redirect('empleado')->with('mensaje','Empleado Borrado');
     }
 }
  
