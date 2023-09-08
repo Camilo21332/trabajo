@@ -3,6 +3,9 @@
 @section('content')
 <div class="container">
 
+
+
+    
 @if(Session::has('mensaje'))
 {{Session::get('mensaje')}}
 
